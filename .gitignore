@@ -1,0 +1,121 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.env
+
+# Google Cloud / App Engine
+.gcloudignore
+*.pyc
+.coverage
+.pytest_cache/
+htmlcov/
+coverage.xml
+.coverage.*
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+.project
+.pydevproject
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# Local development settings
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+local_settings.py
+
+# Log files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database files
+*.sqlite3
+*.db
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+
+# Google App Engine generated folder
+appengine-generated/
+
+# Credentials and secrets
+*.pem
+*.key
+*.cert
+credentials.json
+client_secrets.json
+service-account.json
+
+# Dependency directories
+node_modules/
+jspm_packages/
+bower_components/
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Firestore emulator data
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+.firebaserc
+firebase.json
+firestore.rules
+firestore.indexes.json
+.firebase/
+
+# Local config
+.firebaserc
+firebase.json 
