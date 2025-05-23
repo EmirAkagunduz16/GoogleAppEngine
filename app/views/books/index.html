@@ -1,0 +1,233 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Kitaplar - Dijital Kütüphane{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold mb-3">
+                <i class="fas fa-books me-2"></i>Kitap Kataloğu
+            </h2>
+            <p class="text-muted">Kütüphanemizde bulunan tüm kitapları görüntüleyin ve rezervasyon yapın.</p>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="search-box mb-5">
+        <form method="GET" action="{{ url_for('book_bp.index') }}">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Kitap Ara</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="form-control" id="search" name="search" 
+                               placeholder="Kitap adı, yazar veya ISBN ile arayın..."
+                               value="{{ search_query }}">
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <label for="category" class="form-label">Kategori</label>
+                    <select class="form-select" id="category" name="category">
+                        <option value="all" {{ 'selected' if selected_category == 'all' else '' }}>Tüm Kategoriler</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}" {{ 'selected' if selected_category == cat else '' }}>
+                            {{ cat }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-1"></i>Filtrele
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Info -->
+    {% if search_query or selected_category != 'all' %}
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge bg-primary">{{ books|length }} kitap bulundu</span>
+                    {% if search_query %}
+                    <span class="text-muted">
+                        "<strong>{{ search_query }}</strong>" araması için
+                    </span>
+                    {% endif %}
+                    {% if selected_category != 'all' %}
+                    <span class="text-muted">
+                        <strong>{{ selected_category }}</strong> kategorisinde
+                    </span>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('book_bp.index') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-times me-1"></i>Filtreleri Temizle
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Books Grid -->
+    {% if books %}
+    <div class="row g-4">
+        {% for book in books %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card book-card h-100">
+                <div class="card-body">
+                    <!-- Book Header -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge bg-primary">{{ book.category or 'Kategori' }}</span>
+                        <span class="badge {{ 'bg-success' if book.available_copies > 0 else 'bg-danger' }}">
+                            {% if book.available_copies > 0 %}
+                                {{ book.available_copies }} Mevcut
+                            {% else %}
+                                Stokta Yok
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <!-- Book Info -->
+                    <h5 class="card-title">{{ book.title }}</h5>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-user me-1"></i>{{ book.author }}
+                    </p>
+                    
+                    {% if book.publisher %}
+                    <p class="text-muted small mb-2">
+                        <i class="fas fa-building me-1"></i>{{ book.publisher }}
+                        {% if book.publication_year %}
+                        ({{ book.publication_year }})
+                        {% endif %}
+                    </p>
+                    {% endif %}
+
+                    {% if book.isbn %}
+                    <p class="text-muted small mb-2">
+                        <i class="fas fa-barcode me-1"></i>{{ book.isbn }}
+                    </p>
+                    {% endif %}
+
+                    {% if book.description %}
+                    <p class="card-text text-muted small">
+                        {{ book.description[:120] }}{{ '...' if book.description|length > 120 else '' }}
+                    </p>
+                    {% endif %}
+
+                    <!-- Book Footer -->
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-copy me-1"></i>
+                                {{ book.available_copies }}/{{ book.total_copies }} Mevcut
+                            </small>
+                            {% if book.available_copies > 0 %}
+                            <span class="text-success small">
+                                <i class="fas fa-check me-1"></i>Rezerve Edilebilir
+                            </span>
+                            {% else %}
+                            <span class="text-danger small">
+                                <i class="fas fa-times me-1"></i>Stok Tükendi
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('book_bp.detail', book_id=book.id) }}" 
+                               class="btn btn-outline-primary">
+                                <i class="fas fa-eye me-1"></i>Detayları Görüntüle
+                            </a>
+                            {% if session.user_id and book.available_copies > 0 %}
+                            <form method="POST" action="{{ url_for('book_bp.reserve', book_id=book.id) }}">
+                                <button type="submit" class="btn btn-success w-100"
+                                        onclick="return confirm('Bu kitabı rezerve etmek istediğinizden emin misiniz?')">
+                                    <i class="fas fa-bookmark me-1"></i>Hemen Rezerve Et
+                                </button>
+                            </form>
+                            {% elif not session.user_id %}
+                            <a href="{{ url_for('auth_bp.login') }}" class="btn btn-warning">
+                                <i class="fas fa-sign-in-alt me-1"></i>Rezerve İçin Giriş Yapın
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- No Books Found -->
+    <div class="text-center py-5">
+        <i class="fas fa-search fa-4x text-muted mb-4"></i>
+        <h4 class="text-muted">Kitap bulunamadı</h4>
+        {% if search_query or selected_category != 'all' %}
+        <p class="text-muted">
+            Arama kriterlerinizi değiştirip tekrar deneyin.
+        </p>
+        <a href="{{ url_for('book_bp.index') }}" class="btn btn-primary">
+            <i class="fas fa-undo me-2"></i>Tüm Kitapları Görüntüle
+        </a>
+        {% else %}
+        <p class="text-muted">
+            Henüz kütüphaneye kitap eklenmemiş.
+        </p>
+        {% if session.is_admin %}
+        <a href="{{ url_for('admin_bp.add_book') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>İlk Kitabı Ekle
+        </a>
+        {% endif %}
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Quick Category Filters -->
+    {% if not search_query and selected_category == 'all' %}
+    <div class="mt-5">
+        <h5 class="fw-bold mb-3">Popüler Kategoriler</h5>
+        <div class="row g-2">
+            {% for category in categories %}
+            <div class="col-auto">
+                <a href="{{ url_for('book_bp.index') }}?category={{ category }}" 
+                   class="btn btn-outline-primary btn-sm">
+                    {{ category }}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Live search functionality
+document.getElementById('search').addEventListener('input', function() {
+    const query = this.value;
+    const category = document.getElementById('category').value;
+    
+    if (query.length >= 3) {
+        // You could implement live search here
+        console.log('Searching for:', query);
+    }
+});
+
+// Auto-submit form on category change
+document.getElementById('category').addEventListener('change', function() {
+    this.form.submit();
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,301 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Kitap Yönetimi - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold mb-2">
+                        <i class="fas fa-books me-2"></i>Kitap Yönetimi
+                    </h2>
+                    <p class="text-muted mb-0">Kütüphane kitap koleksiyonunu yönetin</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin_bp.add_book') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Yeni Kitap Ekle
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Overview -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-books fa-2x text-primary mb-2"></i>
+                    <h4 class="text-primary">{{ books|length }}</h4>
+                    <small class="text-muted">Toplam Kitap</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                    <h4 class="text-success">{{ books|selectattr('available_copies', '>', 0)|list|length }}</h4>
+                    <small class="text-muted">Mevcut Kitap</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-exclamation-circle fa-2x text-warning mb-2"></i>
+                    <h4 class="text-warning">{{ books|selectattr('available_copies', '==', 0)|list|length }}</h4>
+                    <small class="text-muted">Stokta Yok</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-layer-group fa-2x text-info mb-2"></i>
+                    <h4 class="text-info">{{ books|map(attribute='total_copies')|sum }}</h4>
+                    <small class="text-muted">Toplam Kopya</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Books Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>Kitap Listesi
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if books %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Kitap Bilgileri</th>
+                            <th>Yazar</th>
+                            <th>Kategori</th>
+                            <th>Stok</th>
+                            <th>ISBN</th>
+                            <th>Yayın Yılı</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for book in books %}
+                        <tr>
+                            <td>
+                                <div>
+                                    <strong>{{ book.title }}</strong><br>
+                                    {% if book.publisher %}
+                                    <small class="text-muted">{{ book.publisher }}</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>{{ book.author }}</td>
+                            <td>
+                                <span class="badge bg-primary">{{ book.category or 'Belirsiz' }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if book.available_copies > 0 %}
+                                    <span class="badge bg-success me-2">{{ book.available_copies }}</span>
+                                    {% else %}
+                                    <span class="badge bg-danger me-2">0</span>
+                                    {% endif %}
+                                    <small class="text-muted">/ {{ book.total_copies }}</small>
+                                </div>
+                                {% if book.available_copies == 0 %}
+                                <small class="text-danger">Stokta yok</small>
+                                {% elif book.available_copies < book.total_copies * 0.3 %}
+                                <small class="text-warning">Az stok</small>
+                                {% else %}
+                                <small class="text-success">Stokta</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if book.isbn %}
+                                <code class="small">{{ book.isbn }}</code>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ book.publication_year or '-' }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{{ url_for('book_bp.detail', book_id=book.id) }}" 
+                                       class="btn btn-outline-primary" title="Görüntüle">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button class="btn btn-outline-warning" title="Düzenle" disabled>
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" title="Sil" 
+                                            onclick="deleteBook('{{ book.id }}', '{{ book.title }}')" disabled>
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-books fa-4x text-muted mb-4"></i>
+                <h4 class="text-muted">Henüz kitap eklenmemiş</h4>
+                <p class="text-muted">Kütüphane koleksiyonunu oluşturmak için ilk kitabı ekleyin.</p>
+                <a href="{{ url_for('admin_bp.add_book') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>İlk Kitabı Ekle
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if books %}
+    <!-- Category Distribution -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Kategori Dağılımı
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% set category_counts = {} %}
+                    {% for book in books %}
+                        {% set category = book.category or 'Belirsiz' %}
+                        {% if category_counts.update({category: category_counts.get(category, 0) + 1}) %}{% endif %}
+                    {% endfor %}
+                    
+                    {% for category, count in category_counts.items() %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ category }}</span>
+                        <div>
+                            <span class="badge bg-primary">{{ count }}</span>
+                            <small class="text-muted ms-2">
+                                ({{ "%.1f"|format((count / books|length * 100)) }}%)
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Stok Analizi
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% set total_books = books|length %}
+                    {% set available_books = books|selectattr('available_copies', '>', 0)|list|length %}
+                    {% set out_of_stock = books|selectattr('available_copies', '==', 0)|list|length %}
+                    {% set low_stock = books|selectattr('available_copies', '<', 3)|selectattr('available_copies', '>', 0)|list|length %}
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span><i class="fas fa-check-circle text-success me-2"></i>Stokta</span>
+                        <span class="badge bg-success">{{ available_books }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span><i class="fas fa-exclamation-triangle text-warning me-2"></i>Az Stok</span>
+                        <span class="badge bg-warning">{{ low_stock }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span><i class="fas fa-times-circle text-danger me-2"></i>Stokta Yok</span>
+                        <span class="badge bg-danger">{{ out_of_stock }}</span>
+                    </div>
+                    
+                    <div class="progress mt-3" style="height: 8px;" 
+                         data-available="{{ available_books }}"
+                         data-low-stock="{{ low_stock }}"
+                         data-out-of-stock="{{ out_of_stock }}"
+                         data-total="{{ total_books }}">
+                        <div class="progress-bar bg-success" id="available-progress"></div>
+                        <div class="progress-bar bg-warning" id="low-stock-progress"></div>
+                        <div class="progress-bar bg-danger" id="out-of-stock-progress"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteBook(bookId, bookTitle) {
+    if (confirm(`"${bookTitle}" kitabını silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz!`)) {
+        // TODO: Implement delete functionality
+        alert('Silme özelliği henüz implement edilmemiş.');
+    }
+}
+
+// Auto refresh data every 2 minutes
+setInterval(function() {
+    if (document.visibilityState === 'visible') {
+        location.reload();
+    }
+}, 120000);
+
+// Search functionality (client-side filtering)
+document.addEventListener('DOMContentLoaded', function() {
+    // Set progress bar widths
+    const progressContainer = document.querySelector('.progress[data-total]');
+    if (progressContainer) {
+        const available = parseInt(progressContainer.dataset.available);
+        const lowStock = parseInt(progressContainer.dataset.lowStock);
+        const outOfStock = parseInt(progressContainer.dataset.outOfStock);
+        const total = parseInt(progressContainer.dataset.total);
+        
+        if (total > 0) {
+            const availablePercent = Math.round((available / total) * 100);
+            const lowStockPercent = Math.round((lowStock / total) * 100);
+            const outOfStockPercent = Math.round((outOfStock / total) * 100);
+            
+            document.getElementById('available-progress').style.width = availablePercent + '%';
+            document.getElementById('low-stock-progress').style.width = lowStockPercent + '%';
+            document.getElementById('out-of-stock-progress').style.width = outOfStockPercent + '%';
+        }
+    }
+    
+    // Add search input if there are books (check if table exists)
+    const booksTable = document.querySelector('tbody tr');
+    if (booksTable) {
+        const cardHeader = document.querySelector('.card-header h5');
+        const searchContainer = document.createElement('div');
+        searchContainer.className = 'd-flex justify-content-between align-items-center';
+        searchContainer.innerHTML = `
+            <h5 class="mb-0"><i class="fas fa-list me-2"></i>Kitap Listesi</h5>
+            <div class="input-group" style="max-width: 300px;">
+                <input type="text" class="form-control form-control-sm" id="bookSearch" placeholder="Kitap ara...">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+            </div>
+        `;
+        cardHeader.parentNode.replaceChild(searchContainer, cardHeader);
+        
+        // Filter functionality
+        document.getElementById('bookSearch').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+    }
+});
+</script>
+{% endblock %} 

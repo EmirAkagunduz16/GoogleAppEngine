@@ -1,0 +1,281 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ book.title }} - Dijital Kütüphane{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main_bp.index') }}">Ana Sayfa</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('book_bp.index') }}">Kitaplar</a></li>
+            <li class="breadcrumb-item active">{{ book.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Book Information -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body p-4">
+                    <!-- Book Header -->
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <span class="badge bg-primary mb-2">{{ book.category or 'Kategori' }}</span>
+                            <h1 class="h3 fw-bold">{{ book.title }}</h1>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-user me-2"></i>{{ book.author }}
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge {{ 'bg-success' if book.available_copies > 0 else 'bg-danger' }} fs-6">
+                                {% if book.available_copies > 0 %}
+                                    <i class="fas fa-check me-1"></i>{{ book.available_copies }} Mevcut
+                                {% else %}
+                                    <i class="fas fa-times me-1"></i>Stokta Yok
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Book Details -->
+                    <div class="row mb-4">
+                        {% if book.publisher %}
+                        <div class="col-md-6 mb-3">
+                            <h6 class="fw-bold text-muted">Yayınevi</h6>
+                            <p class="mb-0">{{ book.publisher }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if book.publication_year %}
+                        <div class="col-md-6 mb-3">
+                            <h6 class="fw-bold text-muted">Yayın Yılı</h6>
+                            <p class="mb-0">{{ book.publication_year }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if book.isbn %}
+                        <div class="col-md-6 mb-3">
+                            <h6 class="fw-bold text-muted">ISBN</h6>
+                            <p class="mb-0">{{ book.isbn }}</p>
+                        </div>
+                        {% endif %}
+
+                        <div class="col-md-6 mb-3">
+                            <h6 class="fw-bold text-muted">Stok Durumu</h6>
+                            <p class="mb-0">{{ book.available_copies }}/{{ book.total_copies }} mevcut</p>
+                        </div>
+
+                        {% if book.created_at %}
+                        <div class="col-md-6 mb-3">
+                            <h6 class="fw-bold text-muted">Katalog Tarihi</h6>
+                            <p class="mb-0">{{ book.created_at.strftime('%d.%m.%Y') }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Description -->
+                    {% if book.description %}
+                    <div class="mb-4">
+                        <h5 class="fw-bold mb-3">Açıklama</h5>
+                        <p class="text-muted">{{ book.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- User Reservation Status -->
+                    {% if user_reservation %}
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-info-circle me-2"></i>Rezervasyon Durumunuz
+                        </h6>
+                        <p class="mb-2">Bu kitabı <strong>{{ user_reservation.reservation_date.strftime('%d.%m.%Y') }}</strong> tarihinde rezerve ettiniz.</p>
+                        <p class="mb-0">
+                            <strong>Son teslim tarihi:</strong> 
+                            <span class="{{ 'text-danger' if user_reservation.due_date.date() < now().date() else 'text-success' }}">
+                                {{ user_reservation.due_date.strftime('%d.%m.%Y') }}
+                            </span>
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Reservation Sidebar -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bookmark me-2"></i>Rezervasyon İşlemleri
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if not session.user_id %}
+                    <!-- Not logged in -->
+                    <div class="text-center py-3">
+                        <i class="fas fa-sign-in-alt fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">Rezervasyon yapmak için giriş yapın</h6>
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('auth_bp.login') }}" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i>Giriş Yap
+                            </a>
+                            <a href="{{ url_for('auth_bp.register') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-user-plus me-2"></i>Kayıt Ol
+                            </a>
+                        </div>
+                    </div>
+
+                    {% elif user_reservation %}
+                    <!-- Already reserved -->
+                    <div class="text-center py-3">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h6 class="text-success">Kitap rezerve edildi</h6>
+                        <p class="small text-muted mb-3">
+                            Bu kitabı {{ user_reservation.reservation_date.strftime('%d.%m.%Y') }} tarihinde rezerve ettiniz.
+                        </p>
+                        <div class="d-grid gap-2">
+                            <form method="POST" action="{{ url_for('book_bp.return_book', reservation_id=user_reservation.id) }}">
+                                <button type="submit" class="btn btn-danger w-100"
+                                        onclick="return confirm('Bu kitabı iade etmek istediğinizden emin misiniz?')">
+                                    <i class="fas fa-undo me-2"></i>Kitabı İade Et
+                                </button>
+                            </form>
+                            <a href="{{ url_for('main_bp.dashboard') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard'a Git
+                            </a>
+                        </div>
+                    </div>
+
+                    {% elif book.available_copies > 0 %}
+                    <!-- Available for reservation -->
+                    <div class="text-center py-3">
+                        <i class="fas fa-bookmark fa-3x text-primary mb-3"></i>
+                        <h6 class="text-primary">Rezervasyon yapabilirsiniz</h6>
+                        <p class="small text-muted mb-3">
+                            Bu kitap şu anda mevcut ve rezerve edilebilir.
+                        </p>
+                        
+                        <!-- Reservation Info -->
+                        <div class="bg-light rounded p-3 mb-3">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <strong class="text-success">{{ book.available_copies }}</strong><br>
+                                    <small class="text-muted">Mevcut</small>
+                                </div>
+                                <div class="col-6">
+                                    <strong class="text-primary">14 gün</strong><br>
+                                    <small class="text-muted">Süre</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <form method="POST" action="{{ url_for('book_bp.reserve', book_id=book.id) }}">
+                                <button type="submit" class="btn btn-success btn-lg w-100"
+                                        onclick="return confirm('Bu kitabı 14 gün süreyle rezerve etmek istediğinizden emin misiniz?')">
+                                    <i class="fas fa-bookmark me-2"></i>Hemen Rezerve Et
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <!-- Not available -->
+                    <div class="text-center py-3">
+                        <i class="fas fa-times-circle fa-3x text-danger mb-3"></i>
+                        <h6 class="text-danger">Şu anda mevcut değil</h6>
+                        <p class="small text-muted mb-3">
+                            Bu kitabın tüm kopyaları rezerve edilmiş durumda.
+                        </p>
+                        <div class="d-grid">
+                            <button class="btn btn-outline-secondary" disabled>
+                                <i class="fas fa-clock me-2"></i>Müsait Olduğunda Bildir
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Hızlı İşlemler
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('book_bp.index') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-arrow-left me-2"></i>Kitap Listesine Dön
+                        </a>
+                        <a href="{{ url_for('book_bp.index') }}?category={{ book.category }}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-tags me-2"></i>{{ book.category }} Kategorisi
+                        </a>
+                        <a href="{{ url_for('book_bp.index') }}?search={{ book.author }}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-user me-2"></i>{{ book.author }} Kitapları
+                        </a>
+                        {% if session.is_admin %}
+                        <hr>
+                        <a href="{{ url_for('admin_bp.books') }}" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-edit me-2"></i>Kitabı Düzenle
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Book Stats -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Kitap İstatistikleri
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <strong class="text-primary d-block">{{ book.total_copies }}</strong>
+                            <small class="text-muted">Toplam Kopya</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <strong class="text-success d-block">{{ book.available_copies }}</strong>
+                            <small class="text-muted">Mevcut</small>
+                        </div>
+                        <div class="col-6">
+                            <strong class="text-warning d-block">{{ book.total_copies - book.available_copies }}</strong>
+                            <small class="text-muted">Rezerve</small>
+                        </div>
+                        <div class="col-6">
+                            <strong class="text-info d-block">
+                                {{ ((book.available_copies / book.total_copies) * 100) | round | int }}%
+                            </strong>
+                            <small class="text-muted">Müsaitlik</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh availability status
+setInterval(function() {
+    fetch('/api/books?search={{ book.title }}')
+        .then(response => response.json())
+        .then(books => {
+            if (books.length > 0) {
+                const book = books.find(b => b.id === '{{ book.id }}');
+                if (book) {
+                    // Update availability status
+                    console.log('Book availability updated:', book.available_copies);
+                }
+            }
+        })
+        .catch(error => console.log('Error fetching book data:', error));
+}, 60000); // Check every minute
+</script>
+{% endblock %} 

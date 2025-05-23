@@ -1,0 +1,238 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Dashboard - Dijital Kütüphane{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="hero-section rounded-3 p-4">
+                <h1 class="h3 mb-2">
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    Hoş geldiniz, {{ session.user_name }}!
+                </h1>
+                <p class="mb-0">Kütüphane aktivitelerinizi buradan takip edebilirsiniz.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <div class="text-primary mb-3">
+                        <i class="fas fa-book-open fa-3x"></i>
+                    </div>
+                    <h3 class="text-primary">{{ stats.active_reservations }}</h3>
+                    <p class="text-muted mb-0">Aktif Rezervasyon</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <div class="text-success mb-3">
+                        <i class="fas fa-history fa-3x"></i>
+                    </div>
+                    <h3 class="text-success">{{ stats.total_reservations }}</h3>
+                    <p class="text-muted mb-0">Toplam Rezervasyon</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <div class="text-danger mb-3">
+                        <i class="fas fa-exclamation-triangle fa-3x"></i>
+                    </div>
+                    <h3 class="text-danger">{{ stats.overdue_books }}</h3>
+                    <p class="text-muted mb-0">Gecikmiş Kitap</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Reservations Section -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bookmark me-2"></i>Aktif Rezervasyonlarım
+                    </h5>
+                    <a href="{{ url_for('book_bp.index') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>Yeni Rezervasyon
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if reservations %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Kitap</th>
+                                    <th>Rezervasyon Tarihi</th>
+                                    <th>Son Teslim</th>
+                                    <th>Durum</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reservation in reservations %}
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <strong>{{ reservation.book.title if reservation.book else 'Bilinmeyen Kitap' }}</strong><br>
+                                            <small class="text-muted">
+                                                {{ reservation.book.author if reservation.book else '' }}
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small>{{ reservation.reservation_date.strftime('%d.%m.%Y') if reservation.reservation_date else 'Bilinmiyor' }}</small>
+                                    </td>
+                                    <td>
+                                        {% if reservation.due_date %}
+                                        <small class="{{ 'text-danger' if reservation.due_date.date() < now().date() else 'text-success' }}">
+                                            {{ reservation.due_date.strftime('%d.%m.%Y') }}
+                                        </small>
+                                        {% else %}
+                                        <small class="text-muted">Bilinmiyor</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if reservation.status == 'active' %}
+                                        <span class="badge bg-success">Aktif</span>
+                                        {% elif reservation.status == 'returned' %}
+                                        <span class="badge bg-secondary">İade Edildi</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">{{ reservation.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if reservation.status == 'active' %}
+                                        <form method="POST" action="{{ url_for('book_bp.return_book', reservation_id=reservation.id) }}" style="display: inline;">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                                    onclick="return confirm('Bu kitabı iade etmek istediğinizden emin misiniz?')">
+                                                <i class="fas fa-undo me-1"></i>İade Et
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        {% if reservation.book %}
+                                        <a href="{{ url_for('book_bp.detail', book_id=reservation.book_id) }}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-eye me-1"></i>Detay
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-bookmark fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">Henüz rezervasyonunuz bulunmuyor</h6>
+                        <p class="text-muted">Kitap kataloğumuzu inceleyerek rezervasyon yapabilirsiniz.</p>
+                        <a href="{{ url_for('book_bp.index') }}" class="btn btn-primary">
+                            <i class="fas fa-books me-2"></i>Kitapları İncele
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions & Recent Books -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>Hızlı İşlemler
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('book_bp.index') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-search me-2"></i>Kitap Ara
+                        </a>
+                        <a href="{{ url_for('book_bp.index') }}?category=Roman" class="btn btn-outline-success">
+                            <i class="fas fa-book me-2"></i>Roman Kategorisi
+                        </a>
+                        <a href="{{ url_for('book_bp.index') }}?category=Bilim" class="btn btn-outline-info">
+                            <i class="fas fa-microscope me-2"></i>Bilim Kitapları
+                        </a>
+                        {% if session.is_admin %}
+                        <hr>
+                        <a href="{{ url_for('admin_bp.dashboard') }}" class="btn btn-outline-warning">
+                            <i class="fas fa-cog me-2"></i>Admin Panel
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Books -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-star me-2"></i>Önerilen Kitaplar
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if books %}
+                    {% for book in books %}
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary text-white rounded d-flex align-items-center justify-content-center" 
+                                 style="width: 40px; height: 40px;">
+                                <i class="fas fa-book"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="mb-1">{{ book.title }}</h6>
+                            <p class="text-muted small mb-1">{{ book.author }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-light text-dark">{{ book.category }}</span>
+                                <a href="{{ url_for('book_bp.detail', book_id=book.id) }}" 
+                                   class="btn btn-outline-primary btn-sm">İncele</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% if not loop.last %}<hr>{% endif %}
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-books fa-2x text-muted mb-2"></i>
+                        <p class="text-muted small mb-0">Henüz kitap bulunmuyor</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto refresh stats every 30 seconds
+setInterval(function() {
+    fetch('/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            if (!data.error) {
+                // Update stats if needed
+                console.log('Stats updated:', data);
+            }
+        })
+        .catch(error => console.log('Stats fetch error:', error));
+}, 30000);
+</script>
+{% endblock %} 

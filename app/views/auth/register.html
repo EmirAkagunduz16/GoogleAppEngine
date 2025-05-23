@@ -1,0 +1,152 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Kayıt Ol - Dijital Kütüphane{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-plus fa-3x text-primary mb-3"></i>
+                        <h2 class="fw-bold">Kayıt Ol</h2>
+                        <p class="text-muted">Ücretsiz hesap oluşturun</p>
+                    </div>
+                    
+                    <form method="POST" novalidate>
+                        <div class="mb-3">
+                            <label for="full_name" class="form-label">Ad Soyad *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <input type="text" class="form-control" id="full_name" name="full_name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">E-posta Adresi *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Telefon Numarası</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-phone"></i>
+                                </span>
+                                <input type="tel" class="form-control" id="phone" name="phone" placeholder="(555) 123-4567">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Şifre *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <button type="button" class="btn btn-outline-secondary" onclick="togglePassword()">
+                                    <i class="fas fa-eye" id="toggleIcon"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                En az 6 karakter olmalıdır
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    <a href="#" class="text-decoration-none">Kullanım koşulları</a>nı ve 
+                                    <a href="#" class="text-decoration-none">gizlilik politikası</a>nı kabul ediyorum
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Hesap Oluştur
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="text-muted">
+                            Zaten hesabınız var mı? 
+                            <a href="{{ url_for('auth_bp.login') }}" class="text-decoration-none">
+                                Giriş yapın
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Benefits -->
+            <div class="card mt-4 border-success">
+                <div class="card-body">
+                    <h6 class="text-success mb-3">
+                        <i class="fas fa-gift me-2"></i>Üyelik Avantajları
+                    </h6>
+                    <ul class="list-unstyled mb-0">
+                        <li><i class="fas fa-check text-success me-2"></i>Kitap rezervasyonu</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Gelişmiş arama</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Kişisel dashboard</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Rezervasyon geçmişi</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const toggleIcon = document.getElementById('toggleIcon');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
+    }
+}
+
+// Form validation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const password = document.getElementById('password');
+    const terms = document.getElementById('terms');
+    
+    password.addEventListener('input', function() {
+        if (this.value.length < 6) {
+            this.setCustomValidity('Şifre en az 6 karakter olmalıdır');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+    
+    form.addEventListener('submit', function(e) {
+        if (!terms.checked) {
+            e.preventDefault();
+            alert('Kullanım koşullarını kabul etmelisiniz');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %} 

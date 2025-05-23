@@ -1,0 +1,203 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Kitap Ekle - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin_bp.dashboard') }}">Admin Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('admin_bp.books') }}">Kitap Yönetimi</a></li>
+            <li class="breadcrumb-item active">Yeni Kitap Ekle</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>Yeni Kitap Ekle
+                    </h4>
+                    <p class="text-muted mb-0">Kütüphane koleksiyonuna yeni kitap ekleyin</p>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" novalidate>
+                        <div class="row">
+                            <!-- Title -->
+                            <div class="col-md-8 mb-3">
+                                <label for="title" class="form-label">Kitap Adı *</label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+                            
+                            <!-- Category -->
+                            <div class="col-md-4 mb-3">
+                                <label for="category" class="form-label">Kategori *</label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Kategori Seçin</option>
+                                    {% for cat in categories %}
+                                    <option value="{{ cat }}">{{ cat }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Author -->
+                            <div class="col-md-6 mb-3">
+                                <label for="author" class="form-label">Yazar *</label>
+                                <input type="text" class="form-control" id="author" name="author" required>
+                            </div>
+
+                            <!-- ISBN -->
+                            <div class="col-md-6 mb-3">
+                                <label for="isbn" class="form-label">ISBN</label>
+                                <input type="text" class="form-control" id="isbn" name="isbn" placeholder="978-3-16-148410-0">
+                            </div>
+
+                            <!-- Publisher -->
+                            <div class="col-md-6 mb-3">
+                                <label for="publisher" class="form-label">Yayınevi</label>
+                                <input type="text" class="form-control" id="publisher" name="publisher">
+                            </div>
+
+                            <!-- Publication Year -->
+                            <div class="col-md-6 mb-3">
+                                <label for="publication_year" class="form-label">Yayın Yılı</label>
+                                <input type="number" class="form-control" id="publication_year" name="publication_year" 
+                                       min="1900" max="2024" value="2024">
+                            </div>
+
+                            <!-- Total Copies -->
+                            <div class="col-md-6 mb-3">
+                                <label for="total_copies" class="form-label">Toplam Kopya Sayısı *</label>
+                                <input type="number" class="form-control" id="total_copies" name="total_copies" 
+                                       min="1" max="100" value="1" required>
+                            </div>
+
+                            <!-- Available Copies (Auto-calculated) -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Mevcut Kopya Sayısı</label>
+                                <input type="text" class="form-control" value="Otomatik hesaplanacak" disabled>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Mevcut kopya sayısı toplam kopya sayısı ile aynı olacaktır
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="col-12 mb-4">
+                                <label for="description" class="form-label">Açıklama</label>
+                                <textarea class="form-control" id="description" name="description" rows="4" 
+                                          placeholder="Kitap hakkında kısa açıklama yazın..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('admin_bp.books') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Geri Dön
+                            </a>
+                            <div>
+                                <button type="reset" class="btn btn-outline-warning me-2">
+                                    <i class="fas fa-undo me-2"></i>Formu Temizle
+                                </button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>Kitabı Kaydet
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-question-circle me-2"></i>Kitap Ekleme Yardımı
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Zorunlu Alanlar</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Kitap Adı</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Yazar</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Kategori</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Toplam Kopya Sayısı</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Öneriler</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-lightbulb text-warning me-2"></i>ISBN numarasını ekleyin</li>
+                                <li><i class="fas fa-lightbulb text-warning me-2"></i>Detaylı açıklama yazın</li>
+                                <li><i class="fas fa-lightbulb text-warning me-2"></i>Doğru kategori seçin</li>
+                                <li><i class="fas fa-lightbulb text-warning me-2"></i>Yayın yılını kontrol edin</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const titleInput = document.getElementById('title');
+    const authorInput = document.getElementById('author');
+    const copiesInput = document.getElementById('total_copies');
+    
+    // Auto-capitalize title and author
+    titleInput.addEventListener('input', function() {
+        this.value = this.value.replace(/\b\w/g, l => l.toUpperCase());
+    });
+    
+    authorInput.addEventListener('input', function() {
+        this.value = this.value.replace(/\b\w/g, l => l.toUpperCase());
+    });
+    
+    // Validate copies count
+    copiesInput.addEventListener('input', function() {
+        if (this.value < 1) {
+            this.value = 1;
+        }
+        if (this.value > 100) {
+            this.value = 100;
+        }
+    });
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const title = titleInput.value.trim();
+        const author = authorInput.value.trim();
+        const category = document.getElementById('category').value;
+        
+        if (!title || !author || !category) {
+            e.preventDefault();
+            alert('Lütfen tüm zorunlu alanları doldurun!');
+            return false;
+        }
+        
+        if (title.length < 2) {
+            e.preventDefault();
+            alert('Kitap adı en az 2 karakter olmalıdır!');
+            titleInput.focus();
+            return false;
+        }
+        
+        if (author.length < 2) {
+            e.preventDefault();
+            alert('Yazar adı en az 2 karakter olmalıdır!');
+            authorInput.focus();
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %} 
