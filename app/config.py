@@ -7,7 +7,7 @@ class Config:
     
     # Firestore configuration
     try:
-        FIRESTORE_DB = firestore.Client()
+        FIRESTORE_DB = firestore.Client(database='new-default')
     except Exception:
         # For local development
         FIRESTORE_DB = None
