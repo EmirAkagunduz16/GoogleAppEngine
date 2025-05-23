@@ -13,7 +13,7 @@ def seed_database():
     
     # Initialize Firestore client
     try:
-        db = firestore.Client(database='new-default')
+        db = firestore.Client()
         print("✅ Firestore client initialized successfully")
     except Exception as e:
         print(f"❌ Error initializing Firestore: {e}")
