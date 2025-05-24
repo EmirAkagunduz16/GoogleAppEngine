@@ -5,9 +5,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - GOOGLE_CLOUD_PROJECT=your-project-id
-      - SECRET_KEY=dev-secret-key
       - FLASK_ENV=development
     volumes:
       - .:/app
-    command: python seed_data.py && python main.py 
+    command: python main.py 
