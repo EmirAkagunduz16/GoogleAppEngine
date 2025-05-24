@@ -225,6 +225,24 @@ echo "gunicorn==21.2.0" >> requirements.txt
 python seed_data.py
 ```
 
+#### 🌐 Alternatif: Arayüzden Proje Ayarlama
+
+**Proje Seçimi:**
+- https://console.cloud.google.com adresine gidin
+- Sol üstteki proje seçici dropdown'una tıklayın
+- Yeni oluşturduğunuz projeyi seçin
+
+**Authentication Seçenekleri:**
+
+1. **Cloud Shell Kullanma (Önerilen):**
+   - Google Cloud Console'da sağ üstteki Cloud Shell ikonuna tıklayın
+   - Otomatik olarak doğru proje aktif olur ve authentication yapılır
+   
+2. **Yerel Terminal İçin:**
+   ```bash
+   gcloud auth login  # Browser açar, Google hesabıyla giriş yapın
+   ```
+
 ### 5. Örnek Veri Yükleme
 ```bash
 python seed_data.py
