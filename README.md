@@ -177,6 +177,7 @@ pip install -r requirements.txt
 ```
 
 ### 4. Google Cloud Ayarları
+
 ```bash
 # Google Cloud SDK kurulumu (eğer yoksa)
 curl https://sdk.cloud.google.com | bash
@@ -185,10 +186,43 @@ exec -l $SHELL
 # Proje oluşturma ve ayarlama
 gcloud projects create your-project-id
 gcloud config set project your-project-id
-gcloud app create --region=europe-west1
+
+# Gerekli API'leri etkinleştirme
+gcloud services enable run.googleapis.com
+gcloud services enable cloudbuild.googleapis.com
+gcloud services enable firestore.googleapis.com
 
 # Firestore veritabanı etkinleştirme
 gcloud firestore databases create --region=europe-west1
+```
+
+#### 🌐 Alternatif: Google Cloud Console'dan Kurulum
+
+**Yeni Proje Oluşturma:**
+- https://console.cloud.google.com/projectcreate
+- Proje adını girin ve billing hesabınızı seçin
+
+**API'leri Etkinleştirme:**
+- Cloud Run API: https://console.cloud.google.com/apis/library/run.googleapis.com
+- Cloud Build API: https://console.cloud.google.com/apis/library/cloudbuild.googleapis.com  
+- Firestore API: https://console.cloud.google.com/apis/library/firestore.googleapis.com
+
+**Firestore Database:**
+- https://console.cloud.google.com/firestore
+- "Create database" → "Native mode" → Location: "europe-west1"
+
+#### 🔧 Proje Ayarları
+
+```bash
+# Gcloud'u yeni projeye bağlama
+gcloud config set project YOUR_PROJECT_ID
+gcloud auth application-default login
+
+# Gunicorn bağımlılığını ekleme
+echo "gunicorn==21.2.0" >> requirements.txt
+
+# Örnek verileri yükleme
+python seed_data.py
 ```
 
 ### 5. Örnek Veri Yükleme
@@ -213,6 +247,322 @@ gcloud app deploy
 ### 2. Canlı URL'yi Açma
 ```bash
 gcloud app browse
+```
+
+## 🐳 Deployment (Google Cloud Run)
+
+Google Cloud Run, daha esnek bir containerized deployment seçeneği sunar. Bu yöntem ile uygulamanızı Docker container olarak çalıştırabilirsiniz.
+
+### 📋 Hızlı Başlangıç Kontrol Listesi
+
+Deployment öncesi gerekli adımlar:
+
+- [ ] ✅ Google Cloud hesabı var
+- [ ] ✅ Billing hesabı aktif
+- [ ] ✅ Google Cloud SDK kurulu (`gcloud`)
+- [ ] ✅ Docker kurulu (yerel test için)
+- [ ] ✅ Proje dosyaları hazır
+
+### 0. Önkoşullar Kontrolü
+
+```bash
+# Google Cloud SDK kurulu mu?
+gcloud version
+
+# Docker kurulu mu?
+docker --version
+
+# Proje dizinine git
+cd /path/to/GoogleAppEngineProject
+```
+
+### 1. Dockerfile Oluşturma
+
+Proje kök dizininde `Dockerfile` dosyası oluşturun:
+
+```dockerfile
+# Python 3.9 slim base image kullan
+FROM python:3.9-slim
+
+# Çalışma dizinini ayarla
+WORKDIR /app
+
+# Sistem bağımlılıklarını yükle
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python bağımlılıklarını kopyala ve yükle
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Uygulama kodunu kopyala
+COPY . .
+
+# Port ortam değişkenini ayarla
+ENV PORT=8080
+
+# Uygulamayı başlat
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 main:app
+```
+
+### 2. Gunicorn Bağımlılığı Ekleme
+
+`requirements.txt` dosyasına gunicorn ekleyin:
+
+```bash
+echo "gunicorn==21.2.0" >> requirements.txt
+```
+
+### 3. Cloud Run İçin Main.py Güncellemesi
+
+Cloud Run ile uyumlu olmak için `main.py` dosyasını güncelleyin:
+
+```python
+import os
+from app import create_app
+
+app = create_app()
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port, debug=False)
+```
+
+### 4. Google Cloud Ayarları
+
+```bash
+# Google Cloud SDK kurulumu (eğer yoksa)
+curl https://sdk.cloud.google.com | bash
+exec -l $SHELL
+
+# Proje oluşturma ve ayarlama
+gcloud projects create your-project-id
+gcloud config set project your-project-id
+
+# Gerekli API'leri etkinleştirme
+gcloud services enable run.googleapis.com
+gcloud services enable cloudbuild.googleapis.com
+gcloud services enable firestore.googleapis.com
+
+# Firestore veritabanı etkinleştirme
+gcloud firestore databases create --region=europe-west1
+```
+
+#### 🌐 Alternatif: Google Cloud Console'dan Kurulum
+
+**Yeni Proje Oluşturma:**
+- https://console.cloud.google.com/projectcreate
+- Proje adını girin ve billing hesabınızı seçin
+
+**API'leri Etkinleştirme:**
+- Cloud Run API: https://console.cloud.google.com/apis/library/run.googleapis.com
+- Cloud Build API: https://console.cloud.google.com/apis/library/cloudbuild.googleapis.com  
+- Firestore API: https://console.cloud.google.com/apis/library/firestore.googleapis.com
+
+**Firestore Database:**
+- https://console.cloud.google.com/firestore
+- "Create database" → "Native mode" → Location: "europe-west1"
+
+#### 🔧 Proje Ayarları
+
+```bash
+# Gcloud'u yeni projeye bağlama
+gcloud config set project YOUR_PROJECT_ID
+gcloud auth application-default login
+
+# Gunicorn bağımlılığını ekleme
+echo "gunicorn==21.2.0" >> requirements.txt
+
+# Örnek verileri yükleme
+python seed_data.py
+```
+
+### 5. Container Image Oluşturma ve Deploy
+
+```bash
+# Container image'ı Google Container Registry'ye build et
+gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/digital-library
+
+# Cloud Run'a deploy et
+gcloud run deploy digital-library \
+    --image gcr.io/YOUR_PROJECT_ID/digital-library \
+    --platform managed \
+    --region europe-west1 \
+    --allow-unauthenticated \
+    --memory 512Mi \
+    --cpu 1 \
+    --max-instances 100
+```
+
+### 6. Ortam Değişkenlerini Ayarlama (Opsiyonel)
+
+```bash
+# Secret key ayarlama
+gcloud run services update digital-library \
+    --region europe-west1 \
+    --set-env-vars SECRET_KEY="your-secret-key-here"
+```
+
+### 7. Custom Domain Ayarlama (Opsiyonel)
+
+```bash
+# Domain mapping oluşturma
+gcloud run domain-mappings create \
+    --service digital-library \
+    --domain your-domain.com \
+    --region europe-west1
+```
+
+### 8. Deployment Sonrası Kontrol
+
+#### ✅ Cloud Run Console'dan Monitoring
+- https://console.cloud.google.com/run
+- Service durumunu, logs'ları ve metrics'leri izleyebilirsiniz
+- Environment variables ve scaling ayarlarını güncelleyebilirsiniz
+
+#### 🧪 Uygulama Testi
+Deploy edilen URL'yi ziyaret edin ve test edin:
+- Ana sayfa yüklenmelidir
+- Demo hesaplarla giriş yapabilmelidir:
+  - Admin: `admin@kutuphane.com` / `admin123`
+  - Kullanıcı: `ahmet@example.com` / `user123`
+
+#### 📊 Service URL'ini Alma
+```bash
+# Deploy edilen servisin URL'ini öğrenme
+gcloud run services describe digital-library \
+    --region europe-west1 \
+    --format="value(status.url)"
+```
+
+### 🔧 Cloud Run Konfigürasyon Seçenekleri
+
+#### CPU ve Memory Ayarları
+```bash
+# Performans ayarları
+gcloud run services update digital-library \
+    --region europe-west1 \
+    --memory 1Gi \
+    --cpu 2 \
+    --concurrency 80 \
+    --max-instances 100 \
+    --min-instances 0
+```
+
+#### Traffic Splitting (Blue/Green Deployment)
+```bash
+# Yeni revision'a %50 traffic yönlendirme
+gcloud run services update-traffic digital-library \
+    --region europe-west1 \
+    --to-revisions REVISION_NAME=50,LATEST=50
+```
+
+### 📊 Cloud Run vs App Engine Karşılaştırması
+
+| Özellik | Cloud Run | App Engine |
+|---------|-----------|------------|
+| **Container Support** | ✅ Native Docker | ❌ Runtime specific |
+| **Cold Start** | ~100-500ms | ~1-3s |
+| **Pricing** | Pay per request | Pay per instance hour |
+| **Scalability** | 0-1000 instances | Automatic |
+| **Custom Runtime** | ✅ Any language | ❌ Supported runtimes |
+| **Memory Limit** | Up to 8GB | Up to 1GB |
+| **CPU** | Up to 4 vCPU | Up to 2.4GHz |
+| **HTTP/2** | ✅ Native | ✅ Supported |
+| **WebSocket** | ✅ Full support | ❌ Limited |
+| **Background Tasks** | ❌ Request-scoped | ✅ Supported |
+
+### ⚠️ Cloud Run Specific Considerations
+
+#### 1. **Stateless Design**
+- Cloud Run containers are stateless
+- Use external storage for persistent data
+- Session data should be stored in Firestore or Redis
+
+#### 2. **Request Timeout**
+- Maximum request timeout: 3600 seconds
+- Default timeout: 300 seconds
+- Configure based on your needs
+
+#### 3. **File System**
+- File system is read-only except `/tmp`
+- Use Cloud Storage for file uploads
+- Temporary files in `/tmp` are lost on scale-down
+
+#### 4. **Environment Variables**
+```bash
+# Production environment variables
+gcloud run services update digital-library \
+    --region europe-west1 \
+    --set-env-vars \
+    FLASK_ENV=production,\
+    SECRET_KEY=your-secret-key,\
+    GOOGLE_CLOUD_PROJECT=your-project-id
+```
+
+### 🛠️ Local Development with Docker
+
+```bash
+# Local olarak Docker ile test etme
+docker build -t digital-library .
+docker run -p 8080:8080 \
+    -e GOOGLE_CLOUD_PROJECT=your-project-id \
+    -e SECRET_KEY=dev-secret-key \
+    digital-library
+
+# Docker Compose ile (opsiyonel)
+# docker-compose.yml dosyası oluşturun:
+```
+
+**docker-compose.yml:**
+```yaml
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - GOOGLE_CLOUD_PROJECT=your-project-id
+      - SECRET_KEY=dev-secret-key
+      - FLASK_ENV=development
+    volumes:
+      - .:/app
+    command: python main.py
+```
+
+### 🔄 CI/CD Pipeline (Cloud Build)
+
+**cloudbuild.yaml** dosyası oluşturun:
+
+```yaml
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/digital-library:$COMMIT_SHA', '.']
+  
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/digital-library:$COMMIT_SHA']
+  
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'digital-library'
+    - '--image'
+    - 'gcr.io/$PROJECT_ID/digital-library:$COMMIT_SHA'
+    - '--region'
+    - 'europe-west1'
+    - '--platform'
+    - 'managed'
+    - '--allow-unauthenticated'
+
+images:
+  - 'gcr.io/$PROJECT_ID/digital-library:$COMMIT_SHA'
 ```
 
 ## 🔐 Demo Hesapları
@@ -302,7 +652,7 @@ python main.py
 4. Admin paneli işlemleri
 5. Rezervasyon iade işlemi
 
-## �� Sorun Giderme
+## 📋 Sorun Giderme
 
 ### ⚠️ Yaygın Deployment Sorunları
 
