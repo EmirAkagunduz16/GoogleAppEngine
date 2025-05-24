@@ -13,6 +13,10 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Uygulama kodunu ve seed_data.py dosyasını kopyala
+COPY . .
+COPY seed_data.py .
+
 # Uygulama kodunu kopyala
 COPY . .
 
@@ -20,4 +24,4 @@ COPY . .
 ENV PORT=8080
 
 # Uygulamayı başlat
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 main:app 
+CMD ["gunicorn", "--bind", ":${PORT}", "--workers", "1", "--threads", "8", "--timeout", "0", "main:app"]

@@ -10,4 +10,4 @@ services:
       - FLASK_ENV=development
     volumes:
       - .:/app
-    command: python main.py 
+    command: python seed_data.py && python main.py 

@@ -67,7 +67,7 @@ def add_book():
             total_copies = 1
         
         # Create book
-        success, message, book = BookService.create_book(
+        success, message, _ = BookService.create_book(
             title=title,
             author=author,
             isbn=isbn,
