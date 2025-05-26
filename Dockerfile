@@ -18,6 +18,7 @@ COPY . .
 
 # Port ortam değişkenini ayarla
 ENV PORT=8080
+ENV PYTHONUNBUFFERED=1
 
-# Uygulamayı başlat
-CMD ["gunicorn", "--bind", ":${PORT}", "--workers", "1", "--threads", "8", "--timeout", "0", "main:app"]
+# Uygulamayı başlat - wsgi.py içindeki application'ı kullanıyoruz
+CMD exec gunicorn --bind 0.0.0.0:$PORT --log-level info wsgi:application

@@ -176,85 +176,6 @@ venv\Scripts\activate     # Windows
 pip install -r requirements.txt
 ```
 
-### 4. Google Cloud Ayarları
-
-```bash
-# Google Cloud SDK kurulumu (eğer yoksa)
-curl https://sdk.cloud.google.com | bash
-exec -l $SHELL
-
-# Proje oluşturma ve ayarlama
-gcloud projects create your-project-id
-gcloud config set project your-project-id
-
-# Gerekli API'leri etkinleştirme
-gcloud services enable run.googleapis.com
-gcloud services enable cloudbuild.googleapis.com
-gcloud services enable firestore.googleapis.com
-
-# Firestore veritabanı etkinleştirme
-gcloud firestore databases create --region=europe-west1
-```
-
-#### 🌐 Alternatif: Google Cloud Console'dan Kurulum
-
-**Yeni Proje Oluşturma:**
-- https://console.cloud.google.com/projectcreate
-- Proje adını girin ve billing hesabınızı seçin
-
-**API'leri Etkinleştirme:**
-- Cloud Run API: https://console.cloud.google.com/apis/library/run.googleapis.com
-- Cloud Build API: https://console.cloud.google.com/apis/library/cloudbuild.googleapis.com  
-- Firestore API: https://console.cloud.google.com/apis/library/firestore.googleapis.com
-
-**Firestore Database:**
-- https://console.cloud.google.com/firestore
-- "Create database" → "Native mode" → Location: "europe-west1"
-
-#### 🔧 Proje Ayarları
-
-```bash
-# Gcloud'u yeni projeye bağlama
-gcloud config set project YOUR_PROJECT_ID
-gcloud auth application-default login
-
-# Gunicorn bağımlılığını ekleme
-echo "gunicorn==21.2.0" >> requirements.txt
-
-# Örnek verileri yükleme
-python seed_data.py
-```
-
-#### 🌐 Alternatif: Arayüzden Proje Ayarlama
-
-**Proje Seçimi:**
-- https://console.cloud.google.com adresine gidin
-- Sol üstteki proje seçici dropdown'una tıklayın
-- Yeni oluşturduğunuz projeyi seçin
-
-**Authentication Seçenekleri:**
-
-1. **Cloud Shell Kullanma (Önerilen):**
-   - Google Cloud Console'da sağ üstteki Cloud Shell ikonuna tıklayın
-   - Otomatik olarak doğru proje aktif olur ve authentication yapılır
-   
-2. **Yerel Terminal İçin:**
-   ```bash
-   gcloud auth login  # Browser açar, Google hesabıyla giriş yapın
-   ```
-
-### 5. Örnek Veri Yükleme
-```bash
-python seed_data.py
-```
-
-### 6. Yerel Çalıştırma
-```bash
-python main.py
-```
-
-Uygulama http://localhost:8080 adresinde çalışacaktır.
-
 ## 🚀 Deployment (Google App Engine)
 
 ### 1. Deployment
@@ -324,30 +245,7 @@ ENV PORT=8080
 CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 main:app
 ```
 
-### 2. Gunicorn Bağımlılığı Ekleme
-
-`requirements.txt` dosyasına gunicorn ekleyin:
-
-```bash
-echo "gunicorn==21.2.0" >> requirements.txt
-```
-
-### 3. Cloud Run İçin Main.py Güncellemesi
-
-Cloud Run ile uyumlu olmak için `main.py` dosyasını güncelleyin:
-
-```python
-import os
-from app import create_app
-
-app = create_app()
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port, debug=False)
-```
-
-### 4. Google Cloud Ayarları
+### 2. Google Cloud Ayarları
 
 ```bash
 # Google Cloud SDK kurulumu (eğer yoksa)
@@ -396,7 +294,7 @@ echo "gunicorn==21.2.0" >> requirements.txt
 python seed_data.py
 ```
 
-### 5. Container Image Oluşturma ve Deploy
+### 3. Container Image Oluşturma ve Deploy
 
 ```bash
 # Container image'ı Google Container Registry'ye build et
@@ -413,7 +311,7 @@ gcloud run deploy digital-library \
     --max-instances 100
 ```
 
-### 6. Ortam Değişkenlerini Ayarlama (Opsiyonel)
+### 4. Ortam Değişkenlerini Ayarlama (Opsiyonel)
 
 ```bash
 # Secret key ayarlama
@@ -422,7 +320,7 @@ gcloud run services update digital-library \
     --set-env-vars SECRET_KEY="your-secret-key-here"
 ```
 
-### 7. Custom Domain Ayarlama (Opsiyonel)
+### 5. Custom Domain Ayarlama (Opsiyonel)
 
 ```bash
 # Domain mapping oluşturma
@@ -432,7 +330,7 @@ gcloud run domain-mappings create \
     --region europe-west1
 ```
 
-### 8. Deployment Sonrası Kontrol
+### 6. Deployment Sonrası Kontrol
 
 #### ✅ Cloud Run Console'dan Monitoring
 - https://console.cloud.google.com/run
