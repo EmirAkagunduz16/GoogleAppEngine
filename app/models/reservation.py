@@ -194,7 +194,7 @@ class Reservation:
         # Update book availability
         book = self.book
         if book:
-            book.return_copy()
+          book.return_copy()
         
         return self.save()
     
