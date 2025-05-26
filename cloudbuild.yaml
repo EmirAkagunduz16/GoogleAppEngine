@@ -1,11 +1,11 @@
 steps:
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/digital-library:$COMMIT_SHA', '.']
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/digital-library:latest', '.']
   
   # Push the container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/digital-library:$COMMIT_SHA']
+    args: ['push', 'gcr.io/$PROJECT_ID/digital-library:latest']
   
   # Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -15,7 +15,7 @@ steps:
     - 'deploy'
     - 'digital-library'
     - '--image'
-    - 'gcr.io/$PROJECT_ID/digital-library:$COMMIT_SHA'
+    - 'gcr.io/$PROJECT_ID/digital-library:latest'
     - '--region'
     - 'europe-west1'
     - '--platform'
@@ -23,4 +23,4 @@ steps:
     - '--allow-unauthenticated'
 
 images:
-  - 'gcr.io/$PROJECT_ID/digital-library:$COMMIT_SHA' 
+  - 'gcr.io/$PROJECT_ID/digital-library:latest' 

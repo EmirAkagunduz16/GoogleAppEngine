@@ -208,6 +208,10 @@ Deployment öncesi gerekli adımlar:
 # Google Cloud SDK kurulu mu?
 gcloud version
 
+# Google Cloud SDK kurulumu (eğer yoksa)
+curl https://sdk.cloud.google.com | bash
+exec -l $SHELL
+
 # Docker kurulu mu?
 docker --version
 
@@ -248,10 +252,6 @@ CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 main:app
 ### 2. Google Cloud Ayarları
 
 ```bash
-# Google Cloud SDK kurulumu (eğer yoksa)
-curl https://sdk.cloud.google.com | bash
-exec -l $SHELL
-
 # Proje oluşturma ve ayarlama
 gcloud projects create your-project-id
 gcloud config set project your-project-id
@@ -262,7 +262,7 @@ gcloud services enable cloudbuild.googleapis.com
 gcloud services enable firestore.googleapis.com
 
 # Firestore veritabanı etkinleştirme
-gcloud firestore databases create --region=europe-west1
+gcloud firestore databases create --location=europe-west1
 ```
 
 #### 🌐 Alternatif: Google Cloud Console'dan Kurulum
@@ -280,16 +280,7 @@ gcloud firestore databases create --region=europe-west1
 - https://console.cloud.google.com/firestore
 - "Create database" → "Native mode" → Location: "europe-west1"
 
-#### 🔧 Proje Ayarları
-
 ```bash
-# Gcloud'u yeni projeye bağlama
-gcloud config set project YOUR_PROJECT_ID
-gcloud auth application-default login
-
-# Gunicorn bağımlılığını ekleme
-echo "gunicorn==21.2.0" >> requirements.txt
-
 # Örnek verileri yükleme
 python seed_data.py
 ```
@@ -311,26 +302,7 @@ gcloud run deploy digital-library \
     --max-instances 100
 ```
 
-### 4. Ortam Değişkenlerini Ayarlama (Opsiyonel)
-
-```bash
-# Secret key ayarlama
-gcloud run services update digital-library \
-    --region europe-west1 \
-    --set-env-vars SECRET_KEY="your-secret-key-here"
-```
-
-### 5. Custom Domain Ayarlama (Opsiyonel)
-
-```bash
-# Domain mapping oluşturma
-gcloud run domain-mappings create \
-    --service digital-library \
-    --domain your-domain.com \
-    --region europe-west1
-```
-
-### 6. Deployment Sonrası Kontrol
+### 4. Deployment Sonrası Kontrol
 
 #### ✅ Cloud Run Console'dan Monitoring
 - https://console.cloud.google.com/run
