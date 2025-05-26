@@ -1,4 +1,5 @@
 import os
+import sys
 from google.cloud import firestore
 
 class Config:
@@ -8,8 +9,10 @@ class Config:
     # Firestore configuration
     try:
         FIRESTORE_DB = firestore.Client()
-    except Exception:
-        # For local development
+        print("Successfully connected to Firestore", file=sys.stderr)
+    except Exception as e:
+        print(f"Firestore error: {str(e)}", file=sys.stderr)
+        # For local development or when there's an error
         FIRESTORE_DB = None
     
     # Application settings
